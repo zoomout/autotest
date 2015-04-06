@@ -122,11 +122,11 @@ public class AcceptanceTestSuite extends ThucydidesJUnitStories {
     }
 
     public void setIeDriverWindows32() {
-        System.setProperty("webdriver.ie.driver", "drivers/windows/iedriver.exe");
+        System.setProperty("webdriver.ie.driver", "drivers/windows/32bit/iedriver.exe");
     }
 
     public void setIeDriverWindows64() {
-        System.setProperty("webdriver.ie.driver", "drivers/windows/iedriver.exe");
+        System.setProperty("webdriver.ie.driver", "drivers/windows/64bit/iedriver.exe");
     }
 
     @Override
