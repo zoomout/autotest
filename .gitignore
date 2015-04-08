@@ -9,6 +9,5 @@ target
 *.jar
 *.war
 *.ear
-/src/test/resources/thucydides.properties
 
 
