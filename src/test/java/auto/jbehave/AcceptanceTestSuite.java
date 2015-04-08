@@ -34,7 +34,7 @@ public class AcceptanceTestSuite extends ThucydidesJUnitStories {
 
     public AcceptanceTestSuite() {
         setDriverAccordingToOS();
-//        selectStoryFilesForRunningSuite();
+        selectStoryFilesForRunningSuite();
     }
 
     private void selectStoryFilesForRunningSuite() {
@@ -59,21 +59,6 @@ public class AcceptanceTestSuite extends ThucydidesJUnitStories {
         return collectStoryPathsFromSuiteFile(suiteOfStories);
     }
 
-    private List<String> collectStoryPathsFromSuiteFile(final File suiteFile) {
-        if (null == suiteFile) {
-            return Collections.emptyList();
-        }
-        List<String> storyPaths;
-        try {
-            storyPaths = Files.readAllLines(Paths.get(suiteFile.getPath()), Charset.defaultCharset());
-        } catch (IOException e) {
-            LOG.error("Failed to open suite file, exiting", e);
-            throw new RuntimeException(e);
-        }
-        LOG.info("Got story paths {}", storyPaths);
-        return storyPaths;
-    }
-
     public File findFile(String searchedFile, File searchInDirectory) {
         File[] listOfAllFilesInDirectory = searchInDirectory.listFiles();
         File suiteOfStories;
@@ -91,6 +76,21 @@ public class AcceptanceTestSuite extends ThucydidesJUnitStories {
         }
         LOG.info("There is no suite: {} in directory {}", searchedFile, searchInDirectory);
         return null;
+    }
+
+    private List<String> collectStoryPathsFromSuiteFile(final File suiteFile) {
+        if (null == suiteFile) {
+            return Collections.emptyList();
+        }
+        List<String> storyPaths;
+        try {
+            storyPaths = Files.readAllLines(Paths.get(suiteFile.getPath()), Charset.defaultCharset());
+        } catch (IOException e) {
+            LOG.error("Failed to open suite file, exiting", e);
+            throw new RuntimeException(e);
+        }
+        LOG.info("Got story paths {}", storyPaths);
+        return storyPaths;
     }
 
     private void setDriverAccordingToOS() {
@@ -180,12 +180,12 @@ public class AcceptanceTestSuite extends ThucydidesJUnitStories {
         System.setProperty("webdriver.ie.driver", "drivers/windows/64bit/iedriver.exe");
     }
 
-    @Override
-    public Configuration configuration() {
-        new MostUsefulConfiguration().useStoryParser(new RegexStoryParser(new ExamplesTableFactory(
-                new LoadFromClasspath(this.getClass()))));
-        return super.configuration();
-    }
+//    @Override
+//    public Configuration configuration() {
+//        new MostUsefulConfiguration().useStoryParser(new RegexStoryParser(new ExamplesTableFactory(
+//                new LoadFromClasspath(this.getClass()))));
+//        return super.configuration();
+//    }
 
     public void parallelAcceptanceTestSuite(List<String> storyNames) {
 
