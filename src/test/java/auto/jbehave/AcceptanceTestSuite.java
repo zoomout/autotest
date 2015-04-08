@@ -12,12 +12,13 @@ import org.jbehave.core.model.ExamplesTableFactory;
 import org.jbehave.core.parsers.RegexStoryParser;
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Properties;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 
 public class AcceptanceTestSuite extends ThucydidesJUnitStories {
     private static final Logger LOG = ProjectLogger.getLogger(AcceptanceTestSuite.class.getSimpleName());
@@ -29,22 +30,67 @@ public class AcceptanceTestSuite extends ThucydidesJUnitStories {
 
         addPropertiesToSystemProperties(env_prop);
         addPropertiesToSystemProperties(thucydides_prop);
-
-        Properties properties = System.getProperties();
     }
 
     public AcceptanceTestSuite() {
         setDriverAccordingToOS();
-        selectStoryFilesForRunningSuite();
+//        selectStoryFilesForRunningSuite();
     }
 
     private void selectStoryFilesForRunningSuite() {
         String storiesPattern = System.getProperty("auto.stories");
-        if (storiesPattern != null) {
-            customRunningStories(storiesPattern);
-        } else {
+        if (storiesPattern == null) {
+            LOG.info("No suite key or pattern was provided, trying to run all stories in parallel");
             parallelAcceptanceTestSuite(storyPaths());
+        } else {
+            List<String> suiteStoryPaths = getStoryPathsForSuite(storiesPattern);
+            if (suiteStoryPaths.isEmpty()) {
+                LOG.info("No suite was found for the given {} key, trying to run as pattern not in parallel",
+                        storiesPattern);
+                findStoriesCalled(storiesPattern);
+            } else {
+                parallelAcceptanceTestSuite(suiteStoryPaths);
+            }
         }
+    }
+
+    private List<String> getStoryPathsForSuite(final String runningSuite) {
+        File suiteOfStories = findFile(runningSuite, new File(System.getProperty("suites.path")));
+        return collectStoryPathsFromSuiteFile(suiteOfStories);
+    }
+
+    private List<String> collectStoryPathsFromSuiteFile(final File suiteFile) {
+        if (null == suiteFile) {
+            return Collections.emptyList();
+        }
+        List<String> storyPaths;
+        try {
+            storyPaths = Files.readAllLines(Paths.get(suiteFile.getPath()), Charset.defaultCharset());
+        } catch (IOException e) {
+            LOG.error("Failed to open suite file, exiting", e);
+            throw new RuntimeException(e);
+        }
+        LOG.info("Got story paths {}", storyPaths);
+        return storyPaths;
+    }
+
+    public File findFile(String searchedFile, File searchInDirectory) {
+        File[] listOfAllFilesInDirectory = searchInDirectory.listFiles();
+        File suiteOfStories;
+        if (listOfAllFilesInDirectory != null) {
+            for (File singleFileFromDirectory : listOfAllFilesInDirectory) {
+                if (singleFileFromDirectory.isDirectory()) {
+                    suiteOfStories = findFile(searchedFile, singleFileFromDirectory);
+                    if (suiteOfStories != null) {
+                        return suiteOfStories;
+                    }
+                } else if (searchedFile.equalsIgnoreCase(singleFileFromDirectory.getName().replaceAll("\\..+$", ""))) {
+                    return singleFileFromDirectory;
+                }
+            }
+        }
+        LOG.info("There is no suite: {} in directory {}", searchedFile, searchInDirectory);
+        return null;
     }
 
     private void setDriverAccordingToOS() {
