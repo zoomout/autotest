@@ -3,9 +3,14 @@ package auto.steps;
 import auto.pages.DictionaryPage;
 import net.thucydides.core.annotations.Step;
 import net.thucydides.core.steps.ScenarioSteps;
-import org.fest.assertions.Assertions;
+
+import java.util.List;
+
+import static org.fest.assertions.Assertions.assertThat;
+
 
 public class EndUserSteps extends ScenarioSteps {
+
 
     DictionaryPage dictionaryPage;
 
@@ -20,13 +25,21 @@ public class EndUserSteps extends ScenarioSteps {
     }
 
     @Step
-    public void should_see_definition(String definition) {
-        Assertions.assertThat(dictionaryPage.getDefinitions().contains(definition));
+    public void should_see_definition(String expectedDefinition) {
+        List<String> definitions = dictionaryPage.getDefinitions();
+        boolean isExpectedDefinitionPresent = false;
+        for (String actualDefinition : definitions) {
+            if (actualDefinition.contains(expectedDefinition)) {
+                isExpectedDefinitionPresent = true;
+                break;
+            }
+        }
+        assertThat(isExpectedDefinitionPresent).as("Expected definition is not present on the page").isTrue();
     }
 
     @Step
     public void is_the_home_page() {
-        dictionaryPage.open();
+        dictionaryPage.open(System.getProperty("host.name"));
     }
 
     @Step

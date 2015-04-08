@@ -4,8 +4,6 @@ package auto.jbehave;
 import auto.utils.OsCheck;
 import auto.utils.ProjectLogger;
 import ch.lambdaj.Lambda;
-import net.thucydides.core.guice.Injectors;
-import net.thucydides.core.util.EnvironmentVariables;
 import net.thucydides.jbehave.ThucydidesJUnitStories;
 import org.jbehave.core.configuration.Configuration;
 import org.jbehave.core.configuration.MostUsefulConfiguration;
@@ -14,27 +12,34 @@ import org.jbehave.core.model.ExamplesTableFactory;
 import org.jbehave.core.parsers.RegexStoryParser;
 import org.slf4j.Logger;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
 
 public class AcceptanceTestSuite extends ThucydidesJUnitStories {
     private static final Logger LOG = ProjectLogger.getLogger(AcceptanceTestSuite.class.getSimpleName());
     private static final String X64_ARCH = "amd64";
-    private static EnvironmentVariables environmentVariables = Injectors.getInjector()
-            .getProvider(EnvironmentVariables.class).get();
+
+    {
+        String env_prop = String.format("src/test/resources/properties/%s.properties", System.getProperty("env"));
+        String thucydides_prop = "src/test/resources/properties/thucydides.properties";
+
+        addPropertiesToSystemProperties(env_prop);
+        addPropertiesToSystemProperties(thucydides_prop);
+
+        Properties properties = System.getProperties();
+    }
 
     public AcceptanceTestSuite() {
-        try {
-            Class.forName("auto.utils.PropertiesCollector");
-        } catch (ClassNotFoundException e) {
-            LOG.error("error instantiating properties", e);
-        }
         setDriverAccordingToOS();
         selectStoryFilesForRunningSuite();
     }
 
     private void selectStoryFilesForRunningSuite() {
-        String storiesPattern = environmentVariables.getProperty("auto.stories");
+        String storiesPattern = System.getProperty("auto.stories");
         if (storiesPattern != null) {
             customRunningStories(storiesPattern);
         } else {
@@ -138,8 +143,8 @@ public class AcceptanceTestSuite extends ThucydidesJUnitStories {
 
     public void parallelAcceptanceTestSuite(List<String> storyNames) {
 
-        Integer agentNumber = environmentVariables.getPropertyAsInteger("parallel.agent.number", 1);
-        Integer agentTotal = environmentVariables.getPropertyAsInteger("parallel.agent.total", 1);
+        Integer agentNumber = Integer.valueOf(System.getProperty("parallel.agent.number"));
+        Integer agentTotal = Integer.valueOf(System.getProperty("parallel.agent.total"));
         List storyPaths = storyNames;
         failIfAgentIsNotConfiguredCorrectly(agentNumber, agentTotal);
         failIfThereAreMoreAgentsThanStories(agentTotal, storyPaths.size());
@@ -188,5 +193,26 @@ public class AcceptanceTestSuite extends ThucydidesJUnitStories {
         for (String story : stories) {
             LOG.info(" - " + story);
         }
+    }
+
+    private void addPropertiesToSystemProperties(final String propertiesFile) {
+
+        Properties props = new Properties();
+        try (FileInputStream fileInputStream = new FileInputStream(propertiesFile)) {
+            props.load(fileInputStream);
+            Enumeration propertyNames = props.propertyNames();
+            while (propertyNames.hasMoreElements()) {
+                String propertyName = (String) propertyNames.nextElement();
+                String localPropertyValue = props.getProperty(propertyName);
+                String currentPropertyValue = System.getProperty(propertyName);
+                if ((currentPropertyValue == null) && (localPropertyValue != null)) {
+                    System.setProperty(propertyName, localPropertyValue);
+                    LOG.debug("System property {} was successfully added", propertyName);
+                }
+            }
+        } catch (IOException e) {
+            LOG.error("error loading thucydides properties", e);
+        }
+
     }
 }

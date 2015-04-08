@@ -12,7 +12,7 @@ import java.util.List;
 
 import static ch.lambdaj.Lambda.convert;
 
-@DefaultUrl("http://en.wiktionary.org/wiki/Wiktionary")
+@DefaultUrl("http://{1}/wiki/Wiktionary")
 public class DictionaryPage extends AbstractTestPage {
 
     @FindBy(name = "search")
