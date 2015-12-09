@@ -9,11 +9,11 @@ import net.thucydides.core.annotations.WhenPageOpens;
 import net.thucydides.core.annotations.findby.FindBy;
 import net.thucydides.core.pages.WebElementFacade;
 import org.openqa.selenium.Cookie;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 
-import java.net.URI;
-import java.util.Date;
+import java.awt.*;
 import java.util.Set;
 
 // TODO: add reference to footer panels
@@ -110,5 +110,12 @@ public abstract class AbstractTestPage extends AbstractPage {
     public void switchToMainFrame() {
         LOG.info("switchToMainFrame");
         getDriver().switchTo().defaultContent();
+    }
+
+    public void maximize() {
+        getDriver().manage().window().setPosition(new Point(0, 0));
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        getDriver().manage().window().setSize(new org.openqa.selenium.Dimension(
+                (int) screenSize.getWidth(), (int) screenSize.getHeight()));
     }
 }
